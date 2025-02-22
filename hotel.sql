@@ -82,6 +82,13 @@ CREATE TABLE cupom (
     CONSTRAINT fk_cupom_reserva FOREIGN KEY (idReserva) REFERENCES reserva(idR)
 );
 
+-- Deletando colunas de cupom, pois houve alteração nas regras de negócio
+ALTER TABLE cupom DROP COLUMN data_expiracao;
+ALTER TABLE cupom DROP COLUMN status;
+
+-- Adição da coluna valor_diaria, pela alteração nas regras de negócio
+ALTER TABLE quarto ADD COLUMN valor_diaria DECIMAL(10,2);
+
 -- Inserção de dados
 -- Inserindo clientes
 INSERT INTO cliente (cpf, nome, sobrenome, data_nascimento, estado_civil) VALUES
@@ -177,6 +184,7 @@ SELECT * FROM contato;
 SELECT * FROM reserva;
 SELECT * FROM quarto;
 SELECT * FROM endereco;
+SELECT * FROM cupom;
 
 -- Nome e contato dos clientes
 SELECT c.nome, co.contato FROM cliente_contato cco
@@ -233,7 +241,39 @@ SELECT c.idC, concat(c.nome, ' ', c.sobrenome) AS nome_completo,
         INNER JOIN reserva r ON c.idC = r.idCliente
         GROUP BY r.idCliente;
         
--- Cupom de 10% para gastos acima de 500 reais
+-- Procedure para adicionar o valor da diária baseada na quantidade de camas
+DELIMITER //
+CREATE PROCEDURE calculo_valor_diaria (idQ INT)
+BEGIN
+		UPDATE quarto
+        SET valor_diaria = CASE
+        WHEN quantid_cama = 1 THEN 200
+        WHEN quantid_cama = 2 THEN 300
+        WHEN quantid_cama = 3 THEN 400
+        END;
+        SELECT * FROM quarto;
+END //
+DELIMITER ;
+DROP PROCEDURE calculo_valor_diaria;
+CALL calculo_valor_diaria (1);
+
+-- Alteração dos valores das reservas levando em conta o número de diárias
 
 
--- Cupom de 25% para gastos acima de 700 reais
+
+-- Trigger para Cupom de 10% em gastos acima de 600 reais
+-- Expiração em um ano 
+SELECT * FROM reserva;
+SELECT * FROM cliente;
+SELECT * FROM cupom;
+SELECT * FROM quarto;
+
+SELECT c.idC, c.nome, r.valor, r.idR FROM cliente c
+INNER JOIN reserva r ON c.idC = r.idCliente
+WHERE r.valor >= 600;
+
+-- Cupom de 25% para gastos acima de 900 reais
+
+
+
+
