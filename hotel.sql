@@ -258,8 +258,27 @@ DROP PROCEDURE calculo_valor_diaria;
 CALL calculo_valor_diaria (1);
 
 -- Alteração dos valores das reservas levando em conta o número de diárias
+SELECT q.valor_diaria * (r.data_checkout - r.data_checkin) AS total, 
+	   q.valor_diaria,
+       r.data_checkin,
+       r.data_checkout,
+       r.data_checkout - r.data_checkin AS dias
+	   FROM quarto q INNER JOIN reserva_quarto rq ON rq.idQ = q.idQ
+       INNER JOIN reserva r ON r.idR = rq.idR;
+	
+DELIMITER //
+CREATE PROCEDURE valor_reserva (idQ INT)
+BEGIN
+	UPDATE reserva r
+    INNER JOIN reserva_quarto rq ON rq.idR = r.idR 
+	INNER JOIN quarto q ON q.idQ = rq.idQ
+    SET valor = q.valor_diaria * (r.data_checkout - r.data_checkin);
+	SELECT * FROM reserva;	
+END //
+DELIMITER ;
 
-
+CALL valor_reserva(1);
+DROP PROCEDURE valor_reserva;
 
 -- Trigger para Cupom de 10% em gastos acima de 600 reais
 -- Expiração em um ano 
